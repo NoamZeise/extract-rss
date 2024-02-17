@@ -1,36 +1,38 @@
 (in-package :extract-rss)
 
-(defun extract-rss (url title)
+(defun extract-rss (webpage)
   (let ((articles
 	 (reverse
 	  (remove
 	   nil
-	   (loop for node in (extract-article-nodes (plump:parse (get-page url))) collect
-		 (handler-case (make-article node)
+	   (loop for node in (funcall (extract-article-nodes webpage)
+				      (plump:parse (get-page (url webpage))))
+		 collect
+		 (handler-case (funcall (make-article webpage) node)
 		   (error (e)
 			  (format t "Couldn't parse article, error ~%~a~%node:~%~a~%~%" e node)
 			  nil)))))))
     (with-open-file
      (f "feed.xml" :direction :output :if-exists :supersede :if-does-not-exist :create)
      (format f (wrap-feed
-		url
-		title
+		webpage
 		(date (first articles))
-		(format nil "~{~a~}"
+		(format nil "~{~%~a~%~}"
 			(mapcar
 			 'as-rss-entry articles)))))))
 
-(defun wrap-feed (url title latest entries-str)
+(defun wrap-feed (webpage latest entries-str)
   (concatenate
    'string
    "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
    (wrap "feed"
 	 (concatenate
 	  'string
+	  "<link href=\"" (url webpage) "\" rel=\"self\" type=\"application/atom+xml\"/>"
 	  (wrap "generator" "extract-rss" "uri=\"https://www.noamzeise.com\"")
 	  (wrap "updated" latest)
-	  (wrap "id" url)
-	  (wrap "title" title)
+	  (wrap "id" (url webpage))
+	  (wrap "title" (title webpage))
 	  entries-str)
 	 "xmlns=\"http://www.w3.org/2005/Atom\"")))
 
@@ -42,13 +44,6 @@
   (if (equalp (char url 0) #\h)
       url
     (concatenate 'string "http://" url)))
-
-(defun extract-article-nodes (root)
-  (let ((articles ()))
-    (loop for a in (plump:get-elements-by-tag-name root "a") do
-	    (if (has-child a "article")
-		(push a articles))) 
-    articles))
 
 (defun has-child (node tag)
   (loop for c across (plump:child-elements node)
@@ -81,14 +76,15 @@ title: ~a~%link: ~a~%image: ~a~%author: ~a~%date: ~a~%category: ~a~%summary: ~a~
 	   (wrap "entry"
 		 (concatenate
 		  'string
-		  (wrap "title" (title article))
+		  (wrap "title" (validify-string (title article)) "type=\"html\"")
 		  "<link href=\"" (link article) "\"/>"
 		  (wrap "id" (link article))
 		  (wrap "updated" (date article))
-		  (wrap "summary"(summary article))
-		  (build-tag (content article) "<content type=\"html\">" "</content>")
-		  (build-tag (category article) "<category term=\"" "\"/>")
-		  (build-tag (author article) "<author><name>" "</name></author>")
+		  (wrap "summary" (validify-string (summary article)))
+		  (build-tag (validify-string (content article))
+			     "<content type=\"html\">" "</content>")
+		  (build-tag (validify-string (category article)) "<category term=\"" "\"/>")
+		  "<author><name>" (validify-string (author article)) "</name></author>"
 		  (build-tag (image article) "<media:thumbnail xmlns:media=\"" "\"/>"))))
 
 (defun build-tag (slot start end)
@@ -97,6 +93,9 @@ title: ~a~%link: ~a~%image: ~a~%author: ~a~%date: ~a~%category: ~a~%summary: ~a~
 (defun wrap (tagname text &optional (attribs nil))
   (concatenate 'string "<" tagname (if attribs (concatenate 'string " " attribs) nil)
 	       ">" text "</" tagname ">"))
+
+(defun validify-string (str)
+  (setf str (cl-ppcre:regex-replace-all "&" str "&amp;")))
 
 (defun get-text (nodes)
   (let ((n (first nodes)))
@@ -121,13 +120,34 @@ title: ~a~%link: ~a~%image: ~a~%author: ~a~%date: ~a~%category: ~a~%summary: ~a~
 	    finally (return nil))
     t))
 
+(defclass webpage ()
+  ((title :initarg :title :accessor title)
+   (url :initarg :url :accessor url)
+   (extract-article-nodes :initarg :extract-nodes :accessor extract-article-nodes)
+   (make-article :initarg :make-article :accessor make-article)))
 
-(defun make-article (node)
-  (let* ((link (plump:get-attribute node "href"))
-	 (title (get-text (select-elem node "h2" '(("data-testid" . "title")))))
-	 (image (get-attrib "src" (select-elem node "img")))
-	 (author (get-text (select-elem node "span" '(("data-testid" . "author")))))
-	 (category (get-text (select-elem node "div" '(("data-testid" . "category")))))
-	 (date (get-attrib "datetime" (select-elem node "time"))))
-    (make-instance 'article
-		   :title title :link link :author author :image image :date date :category category)))
+(defparameter
+ *lol-dev*
+ (make-instance
+  'webpage
+  :title "League of Legends Dev Blog"
+  :url "https://www.leagueoflegends.com/en-us/news/dev/"
+  :extract-nodes
+  (lambda (root)
+    (let ((articles ()))
+      (loop for a in (plump:get-elements-by-tag-name root "a") do
+	    (if (has-child a "article")
+		(push a articles))) 
+      articles))
+  :make-article
+  (lambda (node)
+    (let* ((link (plump:get-attribute node "href"))
+	   (title (get-text (select-elem node "h2" '(("data-testid" . "title")))))
+	   (image (get-attrib "src" (select-elem node "img")))
+	   (author (get-text (select-elem node "span" '(("data-testid" . "author")))))
+	   (category (get-text (select-elem node "div" '(("data-testid" . "category")))))
+	   (date (get-attrib "datetime" (select-elem node "time"))))
+      (make-instance 'article
+		     :title title
+		     :link (concatenate 'string "https://www.leagueoflegends.com/" link)
+		     :author author :image image :date date :category category)))))
