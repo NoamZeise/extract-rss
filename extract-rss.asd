@@ -6,4 +6,6 @@
 	   ((:module "src"
 	     :components
 	     ((:file "package")
-	      (:file "parse")))))
+	      (:file "parse" :depends-on ("article" "webpage"))
+	      (:file "article")
+	      (:file "webpage" :depends-on ("article"))))))
