@@ -1,3 +1,10 @@
 # run at 8am each day and save log to ~/.local/logs/
-0 8 * * * sbcl --noinform --quit --load path/to/add-feeds.lisp path/to/rss/feed/repo >> ~/.local/logs/extract-rss-log.txt
-0 8 * * * ccl -Q -l path/to/add-feeds.lisp -e "(quit)" -- path/to/rss/feed/repo >> ~/.local/logs/extract-rss-log.txt
+0 8 * * * cd /path/to/this/repo && insert extract command >> ~/.local/logs/extract-rss-log.txt
+
+# Extract commands:
+
+# SBCL
+# sbcl --noinform --quit --load add-feeds.lisp path/to/rss/feed/repo
+
+# CCL
+# ccl -Q -l add-feeds.lisp -e "(quit)" -- path/to/rss/feed/repo
