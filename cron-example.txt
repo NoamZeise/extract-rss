@@ -1,2 +1,2 @@
 # run at 8am each day and save log to ~/.local/logs/
-0 8 * * * sbcl --load sources.lisp --eval "(progn (extract-rss::refresh-files) (exit))" > ~/.local/logs/extract-rss-log.txt
+0 8 * * * sbcl --no-inform --load sources.lisp --eval "(progn (extract-rss::refresh-files) (exit))" > ~/.local/logs/extract-rss-log.txt
