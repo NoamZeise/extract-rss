@@ -1,7 +1,5 @@
-
-;;; upload feeds to external - add shebang to start for using as script
-;;; example:
-;;;   #!/usr/local/bin/sbcl --noinform --quit --load
+;;; create feeds and push to external repo
+;;; takes folder to repo as arg
 
 (load "sources.lisp")
 
