@@ -1,3 +1,7 @@
+;;; Can store the webpage defs here
+;;; Add to *sources* to make the feed file when
+;;; refresh-files is called
+
 (load "extract-rss.asd")
 (ql:quickload :extract-rss :silent t)
 (in-package :extract-rss)
@@ -26,8 +30,11 @@
 		     :link (concatenate 'string "https://www.leagueoflegends.com/" link)
 		     :author author :image image :date date :category category)))))
 
+(in-package :cl-user)
+
 (defparameter *sources* (list extract-rss::*lol-dev*))
 
-(defun refresh-files ()
+(defun refresh-files (path)
+  (ensure-directories-exist path)
   (loop for s in *sources* do
-	(extract-rss:extract-rss s "sources/")))
+	(extract-rss:extract-rss s path)))
