@@ -15,6 +15,5 @@ You can then point your rss reader to the raw file, like [so](https://raw.github
 
 # Using
 
-Add a shebang to start of `add-feeds.lisp` for your supported common lisp implementation
-You can run `add-feeds.lisp` as a script periodically (ie chron), which takes a path to a git repo.
-It will add the xml feed files to that path, and updated and push the changes.
+You can run `add-feeds.lisp` as a script periodically, it takes a path to a git repo. see `cron-examples.txt` for commands for some common lisp implementations.
+It will add the xml feed files to that path, update the repo and push the changes.
