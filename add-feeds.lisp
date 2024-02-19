@@ -1,7 +1,7 @@
 ;;; create feeds and push to external repo
 ;;; takes folder to repo as arg
 
-(load "sources.lisp")
+(load (merge-pathnames "sources.lisp" *load-truename*))
 
 (destructuring-bind (path) (uiop:command-line-arguments)
 		    (refresh-files path)

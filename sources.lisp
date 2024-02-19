@@ -2,7 +2,7 @@
 ;;; Add to *sources* to make the feed file when
 ;;; refresh-files is called
 
-(load "extract-rss.asd")
+(load (merge-pathnames "extract-rss.asd" *load-truename*))
 (ql:quickload :extract-rss :silent t)
 (in-package :extract-rss)
 
