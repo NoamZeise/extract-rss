@@ -13,23 +13,22 @@
   :title "League of Legends Dev Blog"
   :url "https://www.leagueoflegends.com/en-us/news/dev/"
   :xml-file "lol-devblog"
-  :extract-nodes
+  :extract-article-nodes
   (lambda (root)
     (loop for a in (plump:get-elements-by-tag-name root "a")
 	  when (has-child a "article") collect a))
   :make-article
   (lambda (node)
-    (let* ((link (plump:get-attribute node "href"))
-	   (title (get-text (select-elem node "h2" '(("data-testid" . "title")))))
-	   (image (get-attrib "src" (select-elem node "img")))
-	   (author (get-text (select-elem node "span" '(("data-testid" . "author")))))
-	   (category (get-text (select-elem node "div" '(("data-testid" . "category")))))
-	   (date (get-attrib "datetime" (select-elem node "time"))))
-      (make-instance 'article
-		     :title title
-		     :link (concatenate 'string "https://www.leagueoflegends.com/" link)
-		     :author author :image image :date date :category category)))))
-
+    (make-instance
+     'article
+     :title (get-text (select-elem node "h2" '(("data-testid" . "title"))))
+     :link (format nil "https://www.leagueoflegends.com/~a"
+		   (plump:get-attribute node "href"))
+     :author (get-text (select-elem node "span" '(("data-testid" . "author"))))
+     :image (get-attrib "src" (select-elem node "img"))
+     :date (get-attrib "datetime" (select-elem node "time"))
+     :category (get-text (select-elem node "div" '(("data-testid" . "category"))))))))
+ 
 (in-package :cl-user)
 
 (defparameter *sources* (list extract-rss::*lol-dev*))

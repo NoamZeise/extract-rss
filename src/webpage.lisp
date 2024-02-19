@@ -4,7 +4,7 @@
   ((title :initarg :title :accessor title)
    (xml-file :initarg :xml-file :accessor xml-file)
    (url :initarg :url :accessor url)
-   (extract-article-nodes :initarg :extract-nodes :accessor extract-article-nodes)
+   (extract-article-nodes :initarg :extract-article-nodes :accessor extract-article-nodes)
    (make-article :initarg :make-article :accessor make-article)))
 
 (defun wrap-feed (webpage latest entries-str)
