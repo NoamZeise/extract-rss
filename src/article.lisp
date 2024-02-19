@@ -45,4 +45,8 @@ title: ~a~%link: ~a~%image: ~a~%author: ~a~%date: ~a~%category: ~a~%summary: ~a~
 	       ">" text "</" tagname ">"))
 
 (defun validify-string (str)
-  (setf str (cl-ppcre:regex-replace-all "&" str "&amp;")))
+  (setf str (cl-ppcre:regex-replace-all "&" str "&amp;"))
+  (setf str (cl-ppcre:regex-replace-all "<" str "&lt;"))
+  (setf str (cl-ppcre:regex-replace-all ">" str "&gt;"))
+  (setf str (cl-ppcre:regex-replace-all "\"" str "&quot;"))
+  (setf str (cl-ppcre:regex-replace-all "'" str "&apos;")))

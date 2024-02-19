@@ -1,32 +1,38 @@
+;;; Functions to help with selecting elements from the dom
+;;; for building feeds for a specific website
 (in-package :extract-rss)
 
-(defun extract-rss (webpage folder)
-  (let ((articles
-	 (reverse
-	  (remove
-	   nil
-	   (loop for node in (funcall (extract-article-nodes webpage)
-				      (plump:parse (get-page (url webpage))))
-		 collect
-		 (handler-case (funcall (make-article webpage) node)
-		   (error (e)
-			  (format t "Couldn't parse article, error ~%~a~%node:~%~a~%~%" e node)
-			  nil)))))))
-    (with-open-file
-     (f (concatenate 'string folder (xml-file webpage) ".xml")
-	:direction :output :if-exists :supersede :if-does-not-exist :create)
-     (format f (wrap-feed
-		webpage
-		(date (first articles))
-		(format nil "~{~a~}"
-			(mapcar
-			 'as-rss-entry articles)))))))
+(defun get-text (nodes)
+  "extract text from first element of nodes"
+  (let ((n (first nodes)))
+    (if n (plump:text n) nil)))
 
-(defun get-page (url)
-  (handler-case (dex:get (fix-url url) :force-string t)
-    (error (e) (progn (format t "Couldn't get webpage ~a, error:~%~a~%" url e) ""))))
+(defun get-attrib (name nodes)
+  "get attribute value with name from first element of nodes"
+  (let ((n (first nodes)))
+    (if n (plump:get-attribute n name) nil)))
 
-(defun fix-url (url)
-  (if (equalp (char url 0) #\h)
-      url
-    (concatenate 'string "http://" url)))
+(defun has-child (node tag)
+  "true if node has child with tag-name of tag"
+  (loop for c across (plump:child-elements node)
+	when (equalp (plump:tag-name c) tag) return t
+	return nil))
+
+(defun select-elem (node tag &optional (attribs ()))
+  """select nodes with tagname and attributes with values matching regexs
+attribs must be a dotted pair of atrribute names and regex for
+matching attribute values"""
+  (loop for e in (plump:get-elements-by-tag-name node tag) when
+	(check-attribs e attribs) collect e))
+
+;;; Helpers 
+
+(defun check-attribs (node attribs)
+  (if attribs
+      (loop for k being the hash-keys in (plump:attributes node) using (hash-value v)
+	    when (loop for (a . r) in attribs
+		       when (if (equalp k a) (cl-ppcre:scan r v) nil)
+		       return t)
+	    return t
+	    finally (return nil))
+    t))
