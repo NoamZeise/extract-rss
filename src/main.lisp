@@ -1,23 +1,35 @@
 (in-package :extract-rss)
 
 (defun extract-rss (webpage folder)
-  (let ((articles
-	 (reverse
-	  (remove
-	   nil
-	   (loop for node in (funcall (extract-article-nodes webpage)
-				      (plump:parse (get-page (url webpage))))
-		 collect
-		 (handler-case (funcall (make-article webpage) node)
-		   (error (e)
-			  (format t "Couldn't parse article, error ~%~a~%node:~%~a~%~%" e node)
-			  nil)))))))
+  (let ((articles (get-articles webpage))
+	(filename ((merge-pathnames
+		    (merge-pathnames folder)
+		    (make-pathname :name (xml-file webpage) :type "xml")))))
     (with-open-file
-     (f (make-pathname :directory folder :name (xml-file webpage) :type "xml")
-	:direction :output :if-exists :supersede :if-does-not-exist :create)
+     (f filename
+	:direction :output
+	:if-exists :supersede
+	:if-does-not-exist :create)
      (format f (make-feed webpage
 			  (date (first articles))
-			  (format nil "~{~a~}" (mapcar 'as-rss-entry articles)))))))
+			  (format nil "~{~a~}"
+				  (mapcar 'as-rss-entry articles)))))))
+
+
+;;; --- Helpers ---
+
+(defun get-articles (webpage)
+  (let ((articles
+	 (loop
+	  for node in
+	  (funcall (extract-article-nodes webpage)
+		   (plump:parse (get-page (url webpage))))
+	  collect
+	  (handler-case (funcall (make-article webpage) node)
+	    (error (e)
+		   (format t "Couldn't parse article, error ~%~a~%node:~%~a~%~%" e node)
+		   nil)))))
+    (reverse (remove nil articles))))
 
 (defun get-page (url)
   (handler-case (dex:get (fix-url url) :force-string t)

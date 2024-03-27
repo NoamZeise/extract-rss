@@ -33,7 +33,7 @@
 
 (defparameter *sources* (list extract-rss::*lol-dev*))
 
-(defun refresh-files (path)
-  (ensure-directories-exist path)
+(defun refresh-files (folder)
+  (ensure-directories-exist folder)
   (loop for s in *sources* do
-	(extract-rss:extract-rss s path)))
+	(extract-rss:extract-rss s folder)))
