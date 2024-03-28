@@ -1,10 +1,13 @@
 (in-package :extract-rss)
 
-(defun extract-rss (webpage folder)
-  (let ((articles (get-articles webpage))
-	(filename (merge-pathnames
-		   (concatenate 'string folder "/")
-		   (make-pathname :name (xml-file webpage) :type "xml"))))
+(defun extract-rss (webpage &optional folder)
+  (let* ((articles (get-articles webpage))
+	 (folder-path (if (or (not folder) (equalp folder ""))
+			  "./"
+			(concatenate 'string folder "/")))
+	 (filename (merge-pathnames
+		    folder-path
+		    (make-pathname :name (xml-file webpage) :type "xml"))))
     (ensure-directories-exist filename)
     (with-open-file
      (f filename
@@ -23,13 +26,17 @@
   (let ((articles
 	 (loop
 	  for node in
-	  (funcall (extract-article-nodes webpage) (get-page-root (url webpage)))
+	  (get-article-nodes webpage)
 	  collect
 	  (handler-case (funcall (make-article webpage) node)
 	    (error (e)
 		   (format t "Couldn't parse article, error ~%~a~%node:~%~a~%~%" e node)
 		   nil)))))
     (reverse (remove nil articles))))
+
+(defun get-article-nodes (webpage)
+  (funcall (extract-article-nodes webpage)
+	   (get-page-root (url webpage))))
 
 (defun get-page-root (url)
   (plump:parse (get-page url)))

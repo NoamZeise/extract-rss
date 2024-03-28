@@ -5,6 +5,7 @@
 	    (:export #:extract-rss
 		     ;; holds parsing info for a given site
 		     #:webpage
+		     #:article
 		     ;; helpers for selecting from dom
 		     #:get-text
 		     #:get-attrib
@@ -12,4 +13,5 @@
 		     #:select-elem
 		     ;; helpers for debugging parsing
 		     #:get-page-root
-		     #:make-article))
+		     #:make-article
+		     #:get-article-nodes))

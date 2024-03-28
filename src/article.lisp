@@ -16,7 +16,7 @@
 	    (format out
 		    "
 title: ~a~%link: ~a~%image: ~a~%author: ~a~%date: ~a~%category: ~a~%summary: ~a~%content: ~a~%"
-		    (link obj) (image obj) (title obj) (author obj) (date obj)
+		    (title obj) (link obj) (image obj) (author obj) (date obj)
 		    (category obj) (summary obj) (content obj))))
 
 (defgeneric as-rss-entry (article)
