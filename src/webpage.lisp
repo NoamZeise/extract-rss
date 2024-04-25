@@ -14,10 +14,13 @@
    (wrap "feed"
 	 (concatenate
 	  'string
+	  (format nil "~%")
 	  "<link href=\"" (url webpage) "\" rel=\"self\" type=\"application/atom+xml\"/>"
+	  (format nil "~%")
 	  (wrap "generator" "extract-rss" "uri=\"https://github.com/NoamZeise/extract-rss\"")
 	  (wrap "updated" latest)
 	  (wrap "id" (url webpage))
 	  (wrap "title" (title webpage))
+	  (format nil "~%")
 	  entries-str)
 	 "xmlns=\"http://www.w3.org/2005/Atom\"")))

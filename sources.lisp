@@ -61,12 +61,12 @@
 	       ((= i 1)
 		(setf
 		 (extract-rss::link article)
-		 (format nil "https://www.lexaloffe.com/bbs/?tid=~a" dat)))
+		 (format nil "https://www.lexaloffle.com/bbs/?tid=~a" dat)))
 	       ((= i 2) (setf (extract-rss::title article) dat))
 	       ((= i 3)
 		(setf
 		 (extract-rss::image article)
-		 (format nil "https://www.lexaloffe.com~a" dat)))
+		 (format nil "https://www.lexaloffle.com~a" dat)))
 	       ((= i 8) (setf (extract-rss::author article) dat))
 	       ((= i 9) (setf (extract-rss::date article) dat))
 	       ((= i 18) (setf (extract-rss::category article) dat)))))
@@ -83,7 +83,8 @@
 	      (progn
 		(if (equalp ch inside-quote)
 		    (setq inside-quote nil)
-		  (if (cl-ppcre:scan "\"|`|'" (list ch))
+		  (if (and (not inside-quote)
+			   (cl-ppcre:scan "\"|`|'" (list ch)))
 		      (setq inside-quote ch)))
 		(if (not inside-quote)
 		    (if inside-bracket

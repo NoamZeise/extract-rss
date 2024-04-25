@@ -26,8 +26,10 @@ title: ~a~%link: ~a~%image: ~a~%author: ~a~%date: ~a~%category: ~a~%summary: ~a~
 	   (wrap "entry"
 		 (concatenate
 		  'string
+		  (format nil "~%")
 		  (wrap "title" (validify-string (title article)) "type=\"html\"")
 		  "<link href=\"" (link article) "\"/>"
+		  (format nil "~%")
 		  (wrap "id" (link article))
 		  (wrap "updated" (date article))
 		  (wrap "summary" (validify-string (summary article)))
@@ -35,14 +37,15 @@ title: ~a~%link: ~a~%image: ~a~%author: ~a~%date: ~a~%category: ~a~%summary: ~a~
 			     "<content type=\"html\">" "</content>")
 		  (build-tag (validify-string (category article)) "<category term=\"" "\"/>")
 		  "<author><name>" (validify-string (author article)) "</name></author>"
+		  (format nil "~%")
 		  (build-tag (image article) "<media:thumbnail xmlns:media=\"" "\"/>"))))
 
 (defun build-tag (slot start end)
-  (if slot (concatenate 'string start slot end) nil))
+  (if slot (concatenate 'string start slot end (format nil "~%")) nil))
 
 (defun wrap (tagname text &optional (attribs nil))
   (concatenate 'string "<" tagname (if attribs (concatenate 'string " " attribs) nil)
-	       ">" text "</" tagname ">"))
+	       ">" text "</" tagname ">" (format nil "~%")))
 
 (defun validify-string (str)
   (setf str (cl-ppcre:regex-replace-all "&" str "&amp;"))

@@ -1,12 +1,24 @@
 (in-package :extract-rss)
 
 (defun extract-rss (webpage &optional folder)
+  "return rss feed xml text, optionally write out to a folder"
   (let* ((articles (get-articles webpage))
-	 (folder-path (if (or (not folder) (equalp folder ""))
-			  "./"
-			(concatenate 'string folder "/")))
+	 (feed-text
+	  (make-feed webpage
+		     (date (first articles))
+		     (format nil "~{~a~%~}"
+			     (mapcar 'as-rss-entry articles)))))
+    (if folder (write-rss-file folder webpage feed-text))
+    feed-text))
+
+;;; --- Helpers ---
+
+(defun write-rss-file (folder webpage text)
+  (let* ((path (if (equalp folder "")
+		   "./"
+		 (concatenate 'string folder "/")))
 	 (filename (merge-pathnames
-		    folder-path
+		    path
 		    (make-pathname :name (xml-file webpage) :type "xml"))))
     (ensure-directories-exist filename)
     (with-open-file
@@ -14,13 +26,7 @@
 	:direction :output
 	:if-exists :supersede
 	:if-does-not-exist :create)
-     (format f (make-feed webpage
-			  (date (first articles))
-			  (format nil "~{~a~}"
-				  (mapcar 'as-rss-entry articles)))))))
-
-
-;;; --- Helpers ---
+     (format f text))))
 
 (defun get-articles (webpage)
   (let ((articles
