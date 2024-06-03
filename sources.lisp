@@ -16,20 +16,48 @@
   :extract-article-nodes
   (lambda (root)
     (loop for a in (plump:get-elements-by-tag-name root "a")
-	  when (has-child a "article") collect a))
+	  do (print (plump:text a))
+	  collect a))
   :make-article
   (lambda (node)
     (make-instance
      'article
-     :title (get-text (select-elem node "h2" '(("data-testid" . "title"))))
-     :link (format nil "https://www.leagueoflegends.com/~a"
-		   (plump:get-attribute node "href"))
-     :author (get-text (select-elem node "span" '(("data-testid" . "author"))))
+     :title (plump:attribute node "aria-label")
+     :link (format nil "https://www.leagueoflegends.com~a" (plump:get-attribute node "href"))
      :image (get-attrib "src" (select-elem node "img"))
-     :date (get-attrib "datetime" (select-elem node "time"))
-     :category (get-text (select-elem node "div" '(("data-testid" . "category"))))))))
+     :date (get-attrib "datetime" (select-elem node "time"))))))
  
 (in-package :cl-user)
+
+(defun get-picotron-article-data (article)
+  (let ((inside-arr nil)
+	(inside-bracket nil)
+	(inside-quote nil)
+	(start nil)
+	(collected (list)))
+    (loop for ch across article and idx from 0 do
+	  (if inside-arr
+	      (progn
+		(if (equalp ch inside-quote)
+		    (setq inside-quote nil)
+		  (if (and (not inside-quote)
+			   (cl-ppcre:scan "\"|`|'" (list ch)))
+		      (setq inside-quote ch)))
+		(if (not inside-quote)
+		    (if inside-bracket
+			(if (equalp ch #\])
+			    (setq inside-bracket nil))
+		      (if (equalp ch #\[)
+			  (setq inside-bracket t))))
+		(if (not start)
+		    (setq start idx)
+		  (if (not (or inside-quote inside-bracket))
+		      (if (equalp ch #\,)
+			  (progn
+			    (push (subseq article start idx) collected)
+			    (setq start nil))))))
+	    (if (equalp ch #\[) (setq inside-arr t))))
+    (reverse collected)))
 
 (defparameter
  *picotron-carts*
@@ -71,36 +99,6 @@
 	       ((= i 9) (setf (extract-rss::date article) dat))
 	       ((= i 18) (setf (extract-rss::category article) dat)))))
       article))))
-
-(defun get-picotron-article-data (article)
-  (let ((inside-arr nil)
-	(inside-bracket nil)
-	(inside-quote nil)
-	(start nil)
-	(collected (list)))
-    (loop for ch across article and idx from 0 do
-	  (if inside-arr
-	      (progn
-		(if (equalp ch inside-quote)
-		    (setq inside-quote nil)
-		  (if (and (not inside-quote)
-			   (cl-ppcre:scan "\"|`|'" (list ch)))
-		      (setq inside-quote ch)))
-		(if (not inside-quote)
-		    (if inside-bracket
-			(if (equalp ch #\])
-			    (setq inside-bracket nil))
-		      (if (equalp ch #\[)
-			  (setq inside-bracket t))))
-		(if (not start)
-		    (setq start idx)
-		  (if (not (or inside-quote inside-bracket))
-		      (if (equalp ch #\,)
-			  (progn
-			    (push (subseq article start idx) collected)
-			    (setq start nil))))))
-	    (if (equalp ch #\[) (setq inside-arr t))))
-    (reverse collected)))
 
 (defparameter *sources*
 	      (list extract-rss::*lol-dev*
